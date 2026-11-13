@@ -1,0 +1,247 @@
+:root{
+  --bg:#e9e9e6;
+  --ink:#141414;
+  --purple:#6f52a8;
+  --purple-text:#0f3f39;
+  --wine:#5c1f2d;
+  --wine-text:#cdb6e4;
+  --lime:#c7d96a;
+  --lime-text:#123f3a;
+  --nav-h:72px;
+  --footer-h:76px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box;}
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Helvetica Neue', Arial, 'Hiragino Sans', sans-serif;
+}
+
+/* real scroll height that drives the whole piece */
+.scroll-spacer{
+  height:500vh;
+}
+
+/* ---------- nav (always on top of the passing ribbon) ---------- */
+.nav{
+  position:fixed;
+  top:0; left:0; right:0;
+  height:var(--nav-h);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 32px;
+  z-index:20;
+  pointer-events:none;
+}
+.nav-logo{
+  font-weight:700;
+  font-size:15px;
+  letter-spacing:0.04em;
+}
+.nav-links{
+  display:flex;
+  gap:28px;
+  font-size:13px;
+  letter-spacing:0.03em;
+}
+.nav-links a{
+  color:var(--ink);
+  text-decoration:none;
+  opacity:0.85;
+}
+.nav-lang{
+  opacity:0.55;
+}
+
+/* ---------- footer (the ribbon runs in front of it) ---------- */
+.site-footer{
+  position:fixed;
+  bottom:0; left:0; right:0;
+  height:var(--footer-h);
+  padding:0 32px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  z-index:4;
+  pointer-events:none;
+}
+.footer-line{
+  position:absolute;
+  top:0; left:32px; right:32px;
+  height:1px;
+  background:var(--ink);
+  opacity:0.25;
+}
+.footer-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:11px;
+  letter-spacing:0.02em;
+  opacity:0.75;
+  gap:16px;
+}
+.footer-contact,.footer-insta,.footer-credit{
+  white-space:nowrap;
+}
+.footer-imprint{
+  color:var(--ink);
+  text-decoration:none;
+  opacity:0.9;
+}
+
+/* ---------- stage (fixed, holds only the static logo) ---------- */
+.stage{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  z-index:1;
+}
+
+/* the logo never moves or resizes once drawn — confirmed against the
+   reference video (pixel-identical across the whole clip) */
+.capsule-shell{
+  position:absolute;
+  left:50%;
+  top:46%;
+  transform:translate(-50%,-50%);
+  background:var(--ink);
+  z-index:1;
+}
+
+/* the hole IS the mask the wordmark is revealed through: it grows,
+   and the type — already full size — simply becomes visible inside it */
+.capsule-hole{
+  position:absolute;
+  left:50%;
+  top:46%;
+  transform:translate(-50%,-50%);
+  background:var(--bg);
+  overflow:hidden;
+  z-index:2;
+}
+
+.wordmark{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  letter-spacing:-0.01em;
+  color:var(--ink);
+  pointer-events:none;
+  white-space:nowrap;
+}
+
+/* ---------- the mask: a fixed face-shaped window, dead centre,
+   that never moves or resizes. the ribbon (the coloured image/text)
+   scrolls vertically INSIDE it; only the slice that currently lands
+   inside the mask's organic outline is visible, and the mask's own
+   bump filter warps whatever is passing through it at that moment —
+   the warp belongs to the mask, not to the content.
+
+   kept as a sibling of .stage, not inside it — a z-index only ranks
+   an element among elements that share a stacking context. nested
+   inside .stage (z-index:1), no z-index on a child could ever clear
+   the footer (z-index:4): the whole .stage layer stacks below it
+   regardless. as a sibling with its own z-index:10, it correctly
+   sits between the footer (4) and the nav (20). ---------- */
+.mask-frame{
+  position:fixed;
+  left:50%;
+  top:46%;
+  width:min(760px, 50vw);
+  /* matches the real face height-map's own pixel aspect (1006x992),
+     the same crop box the clip path and the bump map were normalized
+     against — height is derived, not guessed, so the traced shape
+     never gets stretched out of proportion */
+  aspect-ratio:1006 / 992;
+  transform:translate(-50%, -50%);
+  overflow:hidden;
+  clip-path:url(#ribbonMask);
+  filter:url(#faceRelief);
+  z-index:10;
+}
+
+/* the ribbon itself never leaves the centre of the screen — it's the
+   image/text content scrolling behind the fixed mask above. height is
+   set in px by script.js, in proportion to the mask-frame's own
+   measured height, so it stays correct regardless of aspect-ratio. */
+.ribbon{
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  will-change:transform;
+}
+
+/* zones stack simply, flat colour only — no gradients, no seam
+   shadows. every bit of light/shadow the viewer sees comes from the
+   mask's own feDiffuseLighting/feSpecularLighting filter instead, so
+   content here is pure reference colour. */
+.ribbon-zone{
+  position:absolute;
+  left:0;
+  width:100%;
+  height:36%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.zone-purple{ top:0%;     background:var(--purple); z-index:3; }
+.zone-wine{   top:32%;    background:var(--wine);   z-index:2; }
+.zone-lime{   top:64%;    background:var(--lime);   z-index:1; }
+
+.zone-content{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0.15em;
+  will-change:transform;
+}
+.zone-content.row{
+  flex-direction:row;
+  gap:0.12em;
+}
+
+.panel-word{
+  font-weight:600;
+  font-size:clamp(60px, 13vw, 190px);
+  letter-spacing:-0.005em;
+  position:relative;
+  line-height:0.9;
+}
+.panel-word.big{
+  font-size:clamp(100px, 18vw, 260px);
+}
+.panel-mark{
+  font-weight:600;
+  font-size:clamp(50px, 10vw, 140px);
+  position:relative;
+  line-height:0.9;
+}
+
+.zone-purple .panel-word{ color:var(--purple-text); }
+.zone-wine .panel-mark,
+.zone-wine .panel-word{ color:var(--wine-text); }
+.zone-lime .panel-word{ color:var(--lime-text); }
+
+@media (max-width: 720px){
+  .nav{ padding:0 18px; }
+  .nav-links{ gap:14px; font-size:11px; }
+  .site-footer{ padding:0 18px; }
+  .footer-line{ left:18px; right:18px; }
+  .footer-row{ font-size:9.5px; }
+  .mask-frame{ width:88vw; }
+  .panel-word.big{ font-size:clamp(60px, 22vw, 140px); }
+}
